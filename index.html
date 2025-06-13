@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>出行时间计算器 - 移动优化版</title>
+    <title>出行时间计算器 - 优化版</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -12,10 +12,6 @@
             box-sizing: border-box;
             font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
             -webkit-tap-highlight-color: transparent;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
         }
         
         body {
@@ -144,8 +140,6 @@
             outline: none;
             width: 100%;
             text-align: center;
-            -webkit-user-select: auto;
-            user-select: auto;
         }
         
         .add-process-btn {
@@ -235,7 +229,10 @@
             display: flex;
             justify-content: center;
             -webkit-touch-callout: none;
-            -webkit-user-drag: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
         
         .process-name {
@@ -251,8 +248,6 @@
             border-radius: 8px;
             font-size: 15px;
             transition: border 0.3s;
-            -webkit-user-select: auto;
-            user-select: auto;
         }
         
         .process-name input:focus {
@@ -273,8 +268,6 @@
             text-align: center;
             font-size: 15px;
             transition: border 0.3s;
-            -webkit-user-select: auto;
-            user-select: auto;
         }
         
         .process-duration input:focus {
@@ -289,21 +282,22 @@
         
         .process-actions {
             padding: 0 8px;
-            min-width: 40px;
+            min-width: 30px;
         }
         
         .delete-process {
             background: #ff6b6b;
             color: white;
             border: none;
-            width: 28px;
-            height: 28px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.3s ease;
+            font-size: 12px;
         }
         
         .delete-process:hover {
@@ -439,7 +433,13 @@
             
             .process-actions {
                 padding: 0 6px;
-                min-width: 36px;
+                min-width: 30px;
+            }
+            
+            .delete-process {
+                width: 22px;
+                height: 22px;
+                font-size: 11px;
             }
             
             .timeline-item {
@@ -468,7 +468,7 @@
             
             /* 为移动设备增加更大的拖拽区域 */
             .process-handle {
-                min-width: 40px;
+                min-width: 36px;
                 padding: 0 10px;
             }
         }
@@ -507,40 +507,13 @@
             color: #1890ff;
         }
         
-        /* 拖拽提示 */
-        .drag-hint {
-            text-align: center;
-            padding: 6px;
-            background: #fff8e1;
-            border-radius: 8px;
+        /* 拖拽占位符 */
+        .drag-placeholder {
+            background: #e6f7ff;
+            border: 2px dashed #3a7bd5;
+            border-radius: 10px;
+            height: 60px;
             margin-bottom: 10px;
-            font-size: 11px;
-            color: #ff9800;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .drag-hint i {
-            margin-right: 5px;
-        }
-        
-        /* 移动端拖拽提示 */
-        .mobile-drag-hint {
-            display: none;
-            text-align: center;
-            padding: 6px;
-            background: #e1f5fe;
-            border-radius: 8px;
-            margin-top: 5px;
-            font-size: 11px;
-            color: #0288d1;
-        }
-        
-        @media (max-width: 480px) {
-            .mobile-drag-hint {
-                display: block;
-            }
         }
     </style>
 </head>
@@ -569,14 +542,6 @@
             <div class="card process-card">
                 <div class="card-header">
                     <h2><i class="fas fa-list"></i> 过程时间</h2>
-                </div>
-                
-                <div class="drag-hint">
-                    <i class="fas fa-info-circle"></i> 拖拽项目可调整顺序
-                </div>
-                
-                <div class="mobile-drag-hint">
-                    <i class="fas fa-hand-pointer"></i> 长按并拖动可排序
                 </div>
                 
                 <div class="process-list" id="process-container">
@@ -774,10 +739,21 @@
                 processContainer.appendChild(newProcess);
                 
                 // 为拖拽句柄添加属性
-                newProcess.querySelector('.process-handle').setAttribute('draggable', 'true');
+                setupDragHandle(newProcess.querySelector('.process-handle'));
                 
-                // 自动聚焦到新过程名称
-                newProcess.querySelector('.process-name-input').focus();
+                // 添加删除事件
+                newProcess.querySelector('.delete-process').addEventListener('click', function() {
+                    newProcess.remove();
+                    calculateTimes();
+                });
+                
+                // 添加输入事件
+                newProcess.querySelector('.process-duration-input').addEventListener('input', function() {
+                    validateDurationInput(this);
+                    calculateTimes();
+                });
+                
+                newProcess.querySelector('.process-name-input').addEventListener('input', updateTimeline);
                 
                 // 更新UI
                 calculateTimes();
@@ -1014,62 +990,111 @@
                 return `${hours}:${minutes}`;
             }
             
-            // 初始化拖拽功能
-            let draggedItem = null;
-            
-            processContainer.addEventListener('dragstart', function(e) {
-                if (e.target.classList.contains('process-handle')) {
-                    draggedItem = e.target.closest('.process-item');
-                    draggedItem.classList.add('dragging');
-                    e.dataTransfer.effectAllowed = 'move';
-                    e.dataTransfer.setData('text/plain', '');
+            // 设置拖拽功能
+            function setupDragHandle(handle) {
+                let isDragging = false;
+                let draggedItem = null;
+                let placeholder = null;
+                let startY = 0;
+                let startIndex = 0;
+                
+                // 鼠标/触摸开始事件
+                handle.addEventListener('mousedown', startDrag);
+                handle.addEventListener('touchstart', function(e) {
+                    e.preventDefault(); // 阻止移动设备上的默认行为
+                    startDrag(e.touches[0]);
+                }, { passive: false });
+                
+                function startDrag(e) {
+                    isDragging = true;
+                    draggedItem = handle.closest('.process-item');
+                    startY = e.clientY;
+                    startIndex = Array.from(processContainer.children).indexOf(draggedItem);
                     
-                    // 防止移动设备上的文本选择
+                    // 创建占位符
+                    placeholder = document.createElement('div');
+                    placeholder.className = 'drag-placeholder';
+                    placeholder.style.height = draggedItem.offsetHeight + 'px';
+                    processContainer.insertBefore(placeholder, draggedItem);
+                    
+                    // 设置拖动样式
+                    draggedItem.style.opacity = '0.5';
+                    draggedItem.style.position = 'absolute';
+                    draggedItem.style.zIndex = '1000';
+                    draggedItem.style.width = draggedItem.offsetWidth + 'px';
+                    
+                    // 添加事件监听
+                    document.addEventListener('mousemove', drag);
+                    document.addEventListener('touchmove', touchDrag, { passive: false });
+                    document.addEventListener('mouseup', endDrag);
+                    document.addEventListener('touchend', endDrag);
+                }
+                
+                function drag(e) {
+                    if (!isDragging) return;
+                    updateDrag(e.clientY);
+                }
+                
+                function touchDrag(e) {
+                    if (!isDragging) return;
                     e.preventDefault();
+                    updateDrag(e.touches[0].clientY);
                 }
-            });
-            
-            processContainer.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                if (!draggedItem) return;
                 
-                const afterElement = getDragAfterElement(processContainer, e.clientY);
-                const currentItem = document.querySelector('.dragging');
-                
-                if (!afterElement) {
-                    processContainer.appendChild(currentItem);
-                } else {
-                    processContainer.insertBefore(currentItem, afterElement);
+                function updateDrag(y) {
+                    // 更新拖拽元素位置
+                    const rect = draggedItem.getBoundingClientRect();
+                    draggedItem.style.top = (y - rect.height / 2) + 'px';
+                    
+                    // 找到新的插入位置
+                    const items = Array.from(processContainer.children).filter(el => el !== placeholder && el !== draggedItem);
+                    const target = items.find(item => {
+                        const itemRect = item.getBoundingClientRect();
+                        return y < itemRect.top + itemRect.height / 2;
+                    });
+                    
+                    if (target) {
+                        processContainer.insertBefore(placeholder, target);
+                    } else {
+                        processContainer.appendChild(placeholder);
+                    }
                 }
-            });
-            
-            processContainer.addEventListener('dragend', function(e) {
-                if (draggedItem) {
-                    draggedItem.classList.remove('dragging');
+                
+                function endDrag() {
+                    if (!isDragging) return;
+                    
+                    // 移动拖拽元素到占位符位置
+                    processContainer.insertBefore(draggedItem, placeholder);
+                    
+                    // 清理样式
+                    draggedItem.style.opacity = '';
+                    draggedItem.style.position = '';
+                    draggedItem.style.zIndex = '';
+                    draggedItem.style.width = '';
+                    draggedItem.style.top = '';
+                    
+                    // 移除占位符
+                    placeholder.remove();
+                    
+                    // 移除事件监听
+                    document.removeEventListener('mousemove', drag);
+                    document.removeEventListener('touchmove', touchDrag);
+                    document.removeEventListener('mouseup', endDrag);
+                    document.removeEventListener('touchend', endDrag);
+                    
+                    // 重置变量
+                    isDragging = false;
                     draggedItem = null;
+                    placeholder = null;
+                    
+                    // 重新计算时间
                     calculateTimes();
                 }
-            });
-            
-            // 辅助函数：获取拖拽后的元素位置
-            function getDragAfterElement(container, y) {
-                const draggableElements = [...container.querySelectorAll('.process-item:not(.dragging)')];
-                
-                return draggableElements.reduce((closest, child) => {
-                    const box = child.getBoundingClientRect();
-                    const offset = y - box.top - box.height / 2;
-                    
-                    if (offset < 0 && offset > closest.offset) {
-                        return { offset: offset, element: child };
-                    } else {
-                        return closest;
-                    }
-                }, { offset: Number.NEGATIVE_INFINITY }).element;
             }
             
-            // 为所有过程项添加可拖拽属性
+            // 为所有现有拖拽句柄设置拖拽功能
             document.querySelectorAll('.process-handle').forEach(handle => {
-                handle.setAttribute('draggable', 'true');
+                setupDragHandle(handle);
                 
                 // 添加触摸事件监听器
                 handle.addEventListener('touchstart', function(e) {
