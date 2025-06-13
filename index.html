@@ -553,7 +553,7 @@
                             <input type="text" value="交通时间" class="process-name-input">
                         </div>
                         <div class="process-duration">
-                            <input type="number" min="1" max="240" value="45" class="process-duration-input">
+                            <input type="number" max="240" value="45" class="process-duration-input">
                         </div>
                         <div class="process-actions">
                             <button class="delete-process"><i class="fas fa-times"></i></button>
@@ -568,7 +568,7 @@
                             <input type="text" value="安检时间" class="process-name-input">
                         </div>
                         <div class="process-duration">
-                            <input type="number" min="1" max="180" value="30" class="process-duration-input">
+                            <input type="number" max="180" value="30" class="process-duration-input">
                         </div>
                         <div class="process-actions">
                             <button class="delete-process"><i class="fas fa-times"></i></button>
@@ -583,7 +583,7 @@
                             <input type="text" value="步行时间" class="process-name-input">
                         </div>
                         <div class="process-duration">
-                            <input type="number" min="1" max="120" value="15" class="process-duration-input">
+                            <input type="number" max="120" value="15" class="process-duration-input">
                         </div>
                         <div class="process-actions">
                             <button class="delete-process"><i class="fas fa-times"></i></button>
@@ -730,7 +730,7 @@
                         <input type="text" value="新过程" class="process-name-input">
                     </div>
                     <div class="process-duration">
-                        <input type="number" min="1" max="240" value="30" class="process-duration-input">
+                        <input type="number" max="240" value="30" class="process-duration-input">
                     </div>
                     <div class="process-actions">
                         <button class="delete-process"><i class="fas fa-times"></i></button>
@@ -786,20 +786,18 @@
                 calculateDepartureTime();
             });
             
-            // 验证过程时间输入
+            // 验证过程时间输入（已移除最小值限制）
             function validateDurationInput(input) {
                 let value = parseInt(input.value);
                 
                 if (isNaN(value)) {
-                    input.value = 1;
-                } else if (value < 1) {
-                    input.value = 1;
+                    // 保持原值不变
                 } else if (value > parseInt(input.max)) {
                     input.value = input.max;
                 }
                 
-                // 添加/移除无效样式
-                if (value < 1 || value > parseInt(input.max)) {
+                // 添加/移除无效样式（仅检查最大值）
+                if (value > parseInt(input.max)) {
                     input.classList.add('invalid');
                 } else {
                     input.classList.remove('invalid');
