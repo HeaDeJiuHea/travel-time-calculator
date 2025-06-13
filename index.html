@@ -11,6 +11,7 @@
             padding: 0;
             box-sizing: border-box;
             font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
         
         body {
@@ -134,6 +135,11 @@
             height: 48px;
         }
         
+        .time-input.disabled {
+            background: #f5f7fa;
+            border-color: #e2e8f0;
+        }
+        
         .time-input i {
             color: #3a7bd5;
             font-size: 16px;
@@ -149,6 +155,12 @@
             font-weight: 500;
             color: #2c3e50;
             outline: none;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .time-input.disabled input {
+            color: #718096;
         }
         
         .lock-toggle {
@@ -240,31 +252,36 @@
             border-radius: 10px;
             margin-bottom: 10px;
             transition: all 0.3s ease;
+            position: relative;
         }
         
         .process-handle {
             cursor: move;
-            padding: 0 12px;
+            padding: 0 8px;
             color: #2c3e50;
             font-size: 16px;
+            min-width: 30px;
+            display: flex;
+            justify-content: center;
         }
         
         .process-name {
             flex: 1;
-            padding: 0 12px;
+            min-width: 0;
+            padding: 0 8px;
         }
         
         .process-name input {
             width: 100%;
-            padding: 10px;
+            padding: 10px 8px;
             border: 1px solid #ddd;
             border-radius: 8px;
             font-size: 15px;
         }
         
         .process-duration {
-            width: 100px;
-            padding: 0 12px;
+            width: 90px;
+            padding: 0 8px;
         }
         
         .process-duration input {
@@ -272,12 +289,13 @@
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 8px;
-            text-align: right;
+            text-align: center;
             font-size: 15px;
         }
         
         .process-actions {
-            padding: 0 12px;
+            padding: 0 8px;
+            min-width: 40px;
         }
         
         .delete-process {
@@ -364,6 +382,7 @@
             font-weight: 700;
             color: #3a7bd5;
             margin: 8px 0;
+            text-align: center;
         }
         
         .timeline-duration {
@@ -374,6 +393,8 @@
             background: rgba(58, 123, 213, 0.1);
             border-radius: 15px;
             display: inline-block;
+            text-align: center;
+            width: 100%;
         }
         
         .footer {
@@ -387,20 +408,38 @@
         }
         
         /* 移动端优化 */
-        @media (max-width: 380px) {
+        @media (max-width: 480px) {
             .process-item {
-                flex-wrap: wrap;
+                padding: 12px 10px;
             }
             
-            .process-name, .process-duration {
-                width: 100%;
-                padding: 8px 0;
+            .process-handle {
+                padding: 0 6px;
+                min-width: 24px;
+            }
+            
+            .process-name {
+                padding: 0 6px;
+            }
+            
+            .process-name input {
+                padding: 8px 6px;
+                font-size: 14px;
+            }
+            
+            .process-duration {
+                width: 80px;
+                padding: 0 6px;
+            }
+            
+            .process-duration input {
+                padding: 8px;
+                font-size: 14px;
             }
             
             .process-actions {
-                position: absolute;
-                right: 10px;
-                top: 10px;
+                padding: 0 6px;
+                min-width: 36px;
             }
             
             .timeline-item {
@@ -414,11 +453,32 @@
             .timeline-icon {
                 left: 10px;
             }
+            
+            .card-header h2 {
+                font-size: 16px;
+            }
+            
+            .time-input {
+                height: 45px;
+            }
+            
+            .time-input input {
+                font-size: 15px;
+            }
+        }
+        
+        @media (max-width: 380px) {
+            .process-name input {
+                min-width: 80px;
+            }
+            
+            .process-duration {
+                width: 70px;
+            }
         }
         
         /* 触摸优化 */
         input, button {
-            -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
         }
         
@@ -426,17 +486,40 @@
             cursor: pointer;
         }
         
-        input[type="time"]::-webkit-calendar-picker-indicator {
-            background: transparent;
-            bottom: 0;
-            color: transparent;
-            cursor: pointer;
-            height: auto;
-            left: 0;
-            position: absolute;
-            right: 0;
-            top: 0;
-            width: auto;
+        input[type="time"] {
+            -webkit-appearance: none;
+        }
+        
+        /* 添加加载动画 */
+        .loader {
+            display: none;
+            text-align: center;
+            padding: 10px;
+        }
+        
+        .loader .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(58, 123, 213, 0.3);
+            border-radius: 50%;
+            border-top-color: #3a7bd5;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* 操作提示 */
+        .hint {
+            text-align: center;
+            padding: 8px;
+            background: #e6f7ff;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #1890ff;
         }
     </style>
 </head>
@@ -463,11 +546,12 @@
                 
                 <div class="time-input-group">
                     <label>出发时间</label>
-                    <div class="time-input">
+                    <div class="time-input" id="departure-time-container">
                         <i class="fas fa-clock"></i>
                         <input type="time" id="departure-time" value="08:30">
                     </div>
                 </div>
+                <div class="hint">固定时，出发时间作为计算起点</div>
             </div>
             
             <!-- 过程时间卡片 -->
@@ -526,6 +610,7 @@
                 <button class="add-process-btn" id="add-process">
                     <i class="fas fa-plus"></i> 添加过程时间
                 </button>
+                <div class="hint">点击"+"添加更多过程，如购物、用餐等</div>
             </div>
             
             <!-- 到达时间卡片 -->
@@ -543,11 +628,12 @@
                 
                 <div class="time-input-group">
                     <label>到达时间</label>
-                    <div class="time-input">
+                    <div class="time-input" id="arrival-time-container">
                         <i class="fas fa-clock"></i>
                         <input type="time" id="arrival-time" value="09:30">
                     </div>
                 </div>
+                <div class="hint">固定时，到达时间作为计算起点</div>
             </div>
             
             <!-- 时间线 -->
@@ -615,10 +701,15 @@
                     </div>
                 </div>
             </div>
+            
+            <div class="loader" id="loader">
+                <div class="spinner"></div>
+            </div>
         </div>
         
         <div class="footer">
             <p>温馨提示：计算结果基于您设置的时间参数，实际请根据交通状况和个人需求调整</p>
+            <p>手机访问链接：<span id="share-link">travel-time-calculator.netlify.app</span></p>
         </div>
     </div>
 
@@ -629,13 +720,44 @@
             const arrivalLock = document.getElementById('arrival-lock');
             const departureTimeInput = document.getElementById('departure-time');
             const arrivalTimeInput = document.getElementById('arrival-time');
+            const departureContainer = document.getElementById('departure-time-container');
+            const arrivalContainer = document.getElementById('arrival-time-container');
             const processContainer = document.getElementById('process-container');
             const addProcessBtn = document.getElementById('add-process');
             const timeline = document.getElementById('timeline');
+            const loader = document.getElementById('loader');
+            
+            // 显示加载动画
+            function showLoader() {
+                loader.style.display = 'block';
+            }
+            
+            // 隐藏加载动画
+            function hideLoader() {
+                loader.style.display = 'none';
+            }
+            
+            // 更新输入框状态
+            function updateInputStates() {
+                if (departureLock.checked) {
+                    // 出发时间固定，到达时间可编辑
+                    departureContainer.classList.add('disabled');
+                    departureTimeInput.disabled = true;
+                    arrivalContainer.classList.remove('disabled');
+                    arrivalTimeInput.disabled = false;
+                } else {
+                    // 到达时间固定，出发时间可编辑
+                    arrivalContainer.classList.add('disabled');
+                    arrivalTimeInput.disabled = true;
+                    departureContainer.classList.remove('disabled');
+                    departureTimeInput.disabled = false;
+                }
+            }
             
             // 初始化锁定状态
             departureLock.checked = true;
             arrivalLock.checked = false;
+            updateInputStates();
             
             // 锁定开关逻辑
             departureLock.addEventListener('change', function() {
@@ -644,6 +766,7 @@
                 } else {
                     arrivalLock.checked = true;
                 }
+                updateInputStates();
                 calculateTimes();
             });
             
@@ -653,6 +776,7 @@
                 } else {
                     departureLock.checked = true;
                 }
+                updateInputStates();
                 calculateTimes();
             });
             
@@ -712,53 +836,58 @@
             
             // 主计算函数
             function calculateTimes() {
-                // 获取所有过程时间
-                const processItems = document.querySelectorAll('.process-item');
-                const processes = [];
+                showLoader();
                 
-                processItems.forEach(item => {
-                    const name = item.querySelector('.process-name-input').value;
-                    const duration = parseInt(item.querySelector('.process-duration-input').value) || 0;
-                    processes.push({name, duration});
-                });
-                
-                // 计算总分钟数
-                const totalMinutes = processes.reduce((sum, process) => sum + process.duration, 0);
-                
-                if (departureLock.checked) {
-                    // 从出发时间计算
-                    const departureTime = departureTimeInput.value;
-                    if (!departureTime) return;
+                setTimeout(() => {
+                    // 获取所有过程时间
+                    const processItems = document.querySelectorAll('.process-item');
+                    const processes = [];
                     
-                    const [hours, minutes] = departureTime.split(':').map(Number);
-                    const departureDate = new Date();
-                    departureDate.setHours(hours, minutes, 0, 0);
+                    processItems.forEach(item => {
+                        const name = item.querySelector('.process-name-input').value;
+                        const duration = parseInt(item.querySelector('.process-duration-input').value) || 0;
+                        processes.push({name, duration});
+                    });
                     
-                    // 计算到达时间
-                    const arrivalDate = new Date(departureDate);
-                    arrivalDate.setMinutes(arrivalDate.getMinutes() + totalMinutes);
+                    // 计算总分钟数
+                    const totalMinutes = processes.reduce((sum, process) => sum + process.duration, 0);
                     
-                    // 更新到达时间
-                    arrivalTimeInput.value = formatTime(arrivalDate);
-                } else {
-                    // 从到达时间计算
-                    const arrivalTime = arrivalTimeInput.value;
-                    if (!arrivalTime) return;
+                    if (departureLock.checked) {
+                        // 从出发时间计算
+                        const departureTime = departureTimeInput.value;
+                        if (!departureTime) return;
+                        
+                        const [hours, minutes] = departureTime.split(':').map(Number);
+                        const departureDate = new Date();
+                        departureDate.setHours(hours, minutes, 0, 0);
+                        
+                        // 计算到达时间
+                        const arrivalDate = new Date(departureDate);
+                        arrivalDate.setMinutes(arrivalDate.getMinutes() + totalMinutes);
+                        
+                        // 更新到达时间
+                        arrivalTimeInput.value = formatTime(arrivalDate);
+                    } else {
+                        // 从到达时间计算
+                        const arrivalTime = arrivalTimeInput.value;
+                        if (!arrivalTime) return;
+                        
+                        const [hours, minutes] = arrivalTime.split(':').map(Number);
+                        const arrivalDate = new Date();
+                        arrivalDate.setHours(hours, minutes, 0, 0);
+                        
+                        // 计算出发时间
+                        const departureDate = new Date(arrivalDate);
+                        departureDate.setMinutes(departureDate.getMinutes() - totalMinutes);
+                        
+                        // 更新出发时间
+                        departureTimeInput.value = formatTime(departureDate);
+                    }
                     
-                    const [hours, minutes] = arrivalTime.split(':').map(Number);
-                    const arrivalDate = new Date();
-                    arrivalDate.setHours(hours, minutes, 0, 0);
-                    
-                    // 计算出发时间
-                    const departureDate = new Date(arrivalDate);
-                    departureDate.setMinutes(departureDate.getMinutes() - totalMinutes);
-                    
-                    // 更新出发时间
-                    departureTimeInput.value = formatTime(departureDate);
-                }
-                
-                // 更新时间线
-                updateTimeline();
+                    // 更新时间线
+                    updateTimeline();
+                    hideLoader();
+                }, 300);
             }
             
             // 更新时间线
@@ -861,6 +990,10 @@
             
             // 初始化计算
             calculateTimes();
+            
+            // 添加分享功能
+            const shareLink = document.getElementById('share-link');
+            shareLink.textContent = window.location.hostname || 'travel-time-calculator.netlify.app';
         });
     </script>
 </body>
