@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>出行时间计算器</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2980, #26d0ce);
+            min-height: 100vh;
+            padding: 15px;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.97);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(90deg, #3a7bd5, #00d2ff);
+            color: white;
+            padding: 20px 15px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .header h1 {
+            font-size: 22px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .header h1 i {
+            margin-right: 10px;
+            font-size: 24px;
+        }
+        
+        .header p {
+            font-size: 13px;
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+        
+        .content {
+            padding: 20px 15px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 18px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border-left: 5px solid #3a7bd5;
+            transition: all 0.3s ease;
+        }
+        
+        .departure-card {
+            border-left-color: #ff6b6b;
+        }
+        
+        .arrival-card {
+            border-left-color: #4cd97b;
+        }
+        
+        .process-card {
+            border-left-color: #ffbe0b;
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        
+        .card-header h2 {
+            font-size: 17px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+        }
+        
+        .card-header h2 i {
+            margin-right: 10px;
+            font-size: 18px;
+            width: 32px;
+            height: 32px;
+            background: #f0f7ff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .time-input-group {
+            margin-bottom: 12px;
+        }
+        
+        .time-input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+        
+        .time-input {
+            display: flex;
+            align-items: center;
+            background: #f0f7ff;
+            border-radius: 12px;
+            padding: 0 15px;
+            border: 2px solid #c2e0ff;
+            height: 48px;
+        }
+        
+        .time-input i {
+            color: #3a7bd5;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        
+        .time-input input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 5px 0;
+            font-size: 16px;
+            font-weight: 500;
+            color: #2c3e50;
+            outline: none;
+        }
+        
+        .lock-toggle {
+            display: flex;
+            align-items: center;
+            background: rgba(58, 123, 213, 0.1);
+            padding: 5px 10px;
+            border-radius: 30px;
+        }
+        
+        .lock-toggle span {
+            margin-right: 8px;
+            font-size: 13px;
+            color: #2c3e50;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 46px;
+            height: 22px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 22px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #4cd97b;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+        
+        .add-process-btn {
+            background: linear-gradient(90deg, #3a7bd5, #00d2ff);
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            margin-top: 10px;
+            box-shadow: 0 4px 10px rgba(58, 123, 213, 0.3);
+        }
+        
+        .add-process-btn i {
+            margin-right: 8px;
+        }
+        
+        .process-item {
+            display: flex;
+            align-items: center;
+            padding: 14px;
+            background: #f5f7fa;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .process-handle {
+            cursor: move;
+            padding: 0 12px;
+            color: #2c3e50;
+            font-size: 16px;
+        }
+        
+        .process-name {
+            flex: 1;
+            padding: 0 12px;
+        }
+        
+        .process-name input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+        
+        .process-duration {
+            width: 100px;
+            padding: 0 12px;
+        }
+        
+        .process-duration input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            text-align: right;
+            font-size: 15px;
+        }
+        
+        .process-actions {
+            padding: 0 12px;
+        }
+        
+        .delete-process {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .timeline {
+            margin-top: 25px;
+            position: relative;
+            padding: 15px 0;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 25px;
+            left: 20px;
+            height: calc(100% - 50px);
+            width: 3px;
+            background: #c2e0ff;
+            border-radius: 2px;
+        }
+        
+        .timeline-item {
+            display: flex;
+            margin-bottom: 25px;
+            position: relative;
+            padding-left: 50px;
+        }
+        
+        .timeline-icon {
+            position: absolute;
+            left: 13px;
+            top: 10px;
+            width: 22px;
+            height: 22px;
+            background: white;
+            border: 3px solid #3a7bd5;
+            border-radius: 50%;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .timeline-icon i {
+            font-size: 10px;
+            color: #3a7bd5;
+        }
+        
+        .timeline-content {
+            background: #f0f7ff;
+            border-radius: 10px;
+            padding: 14px;
+            flex: 1;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .timeline-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            font-size: 15px;
+        }
+        
+        .timeline-title i {
+            margin-right: 8px;
+            font-size: 14px;
+        }
+        
+        .timeline-time {
+            font-size: 17px;
+            font-weight: 700;
+            color: #3a7bd5;
+            margin: 8px 0;
+        }
+        
+        .timeline-duration {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 5px;
+            padding: 4px 8px;
+            background: rgba(58, 123, 213, 0.1);
+            border-radius: 15px;
+            display: inline-block;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 18px;
+            color: #7f8c8d;
+            font-size: 13px;
+            border-top: 1px solid #eee;
+            background: #f9f9f9;
+            line-height: 1.5;
+        }
+        
+        /* 移动端优化 */
+        @media (max-width: 380px) {
+            .process-item {
+                flex-wrap: wrap;
+            }
+            
+            .process-name, .process-duration {
+                width: 100%;
+                padding: 8px 0;
+            }
+            
+            .process-actions {
+                position: absolute;
+                right: 10px;
+                top: 10px;
+            }
+            
+            .timeline-item {
+                padding-left: 40px;
+            }
+            
+            .timeline::before {
+                left: 18px;
+            }
+            
+            .timeline-icon {
+                left: 10px;
+            }
+        }
+        
+        /* 触摸优化 */
+        input, button {
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        
+        button, .switch {
+            cursor: pointer;
+        }
+        
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            background: transparent;
+            bottom: 0;
+            color: transparent;
+            cursor: pointer;
+            height: auto;
+            left: 0;
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-clock"></i> 出行时间计算器</h1>
+            <p>设置过程时间，智能计算出发或到达时间</p>
+        </div>
+        
+        <div class="content">
+            <!-- 出发时间卡片 -->
+            <div class="card departure-card">
+                <div class="card-header">
+                    <h2><i class="fas fa-home"></i> 出发时间</h2>
+                    <div class="lock-toggle">
+                        <span>固定</span>
+                        <label class="switch">
+                            <input type="checkbox" id="departure-lock" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="time-input-group">
+                    <label>出发时间</label>
+                    <div class="time-input">
+                        <i class="fas fa-clock"></i>
+                        <input type="time" id="departure-time" value="08:30">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 过程时间卡片 -->
+            <div class="card process-card">
+                <div class="card-header">
+                    <h2><i class="fas fa-list"></i> 过程时间</h2>
+                </div>
+                
+                <div id="process-container">
+                    <div class="process-item">
+                        <div class="process-handle">
+                            <i class="fas fa-grip-lines"></i>
+                        </div>
+                        <div class="process-name">
+                            <input type="text" value="交通时间" class="process-name-input">
+                        </div>
+                        <div class="process-duration">
+                            <input type="number" min="1" max="240" value="45" class="process-duration-input">
+                        </div>
+                        <div class="process-actions">
+                            <button class="delete-process"><i class="fas fa-times"></i></button>
+                        </div>
+                    </div>
+                    
+                    <div class="process-item">
+                        <div class="process-handle">
+                            <i class="fas fa-grip-lines"></i>
+                        </div>
+                        <div class="process-name">
+                            <input type="text" value="安检时间" class="process-name-input">
+                        </div>
+                        <div class="process-duration">
+                            <input type="number" min="1" max="180" value="30" class="process-duration-input">
+                        </div>
+                        <div class="process-actions">
+                            <button class="delete-process"><i class="fas fa-times"></i></button>
+                        </div>
+                    </div>
+                    
+                    <div class="process-item">
+                        <div class="process-handle">
+                            <i class="fas fa-grip-lines"></i>
+                        </div>
+                        <div class="process-name">
+                            <input type="text" value="步行时间" class="process-name-input">
+                        </div>
+                        <div class="process-duration">
+                            <input type="number" min="1" max="120" value="15" class="process-duration-input">
+                        </div>
+                        <div class="process-actions">
+                            <button class="delete-process"><i class="fas fa-times"></i></button>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="add-process-btn" id="add-process">
+                    <i class="fas fa-plus"></i> 添加过程时间
+                </button>
+            </div>
+            
+            <!-- 到达时间卡片 -->
+            <div class="card arrival-card">
+                <div class="card-header">
+                    <h2><i class="fas fa-flag-checkered"></i> 到达时间</h2>
+                    <div class="lock-toggle">
+                        <span>固定</span>
+                        <label class="switch">
+                            <input type="checkbox" id="arrival-lock">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="time-input-group">
+                    <label>到达时间</label>
+                    <div class="time-input">
+                        <i class="fas fa-clock"></i>
+                        <input type="time" id="arrival-time" value="09:30">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 时间线 -->
+            <div class="timeline" id="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-icon">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">
+                            <i class="fas fa-home"></i> 出发
+                        </div>
+                        <div class="timeline-time" id="timeline-departure">08:30</div>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-icon">
+                        <i class="fas fa-car"></i>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">
+                            <i class="fas fa-car"></i> 交通时间
+                        </div>
+                        <div class="timeline-time" id="timeline-travel">09:15</div>
+                        <div class="timeline-duration">45分钟</div>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">
+                            <i class="fas fa-shield-alt"></i> 安检时间
+                        </div>
+                        <div class="timeline-time" id="timeline-airport">09:45</div>
+                        <div class="timeline-duration">30分钟</div>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-icon">
+                        <i class="fas fa-walking"></i>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">
+                            <i class="fas fa-walking"></i> 步行时间
+                        </div>
+                        <div class="timeline-time" id="timeline-boarding">10:00</div>
+                        <div class="timeline-duration">15分钟</div>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-icon">
+                        <i class="fas fa-flag-checkered"></i>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">
+                            <i class="fas fa-flag-checkered"></i> 到达
+                        </div>
+                        <div class="timeline-time" id="timeline-arrival">10:00</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>温馨提示：计算结果基于您设置的时间参数，实际请根据交通状况和个人需求调整</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取DOM元素
+            const departureLock = document.getElementById('departure-lock');
+            const arrivalLock = document.getElementById('arrival-lock');
+            const departureTimeInput = document.getElementById('departure-time');
+            const arrivalTimeInput = document.getElementById('arrival-time');
+            const processContainer = document.getElementById('process-container');
+            const addProcessBtn = document.getElementById('add-process');
+            const timeline = document.getElementById('timeline');
+            
+            // 初始化锁定状态
+            departureLock.checked = true;
+            arrivalLock.checked = false;
+            
+            // 锁定开关逻辑
+            departureLock.addEventListener('change', function() {
+                if (this.checked) {
+                    arrivalLock.checked = false;
+                } else {
+                    arrivalLock.checked = true;
+                }
+                calculateTimes();
+            });
+            
+            arrivalLock.addEventListener('change', function() {
+                if (this.checked) {
+                    departureLock.checked = false;
+                } else {
+                    departureLock.checked = true;
+                }
+                calculateTimes();
+            });
+            
+            // 添加过程时间
+            addProcessBtn.addEventListener('click', function() {
+                const newProcess = document.createElement('div');
+                newProcess.className = 'process-item';
+                newProcess.innerHTML = `
+                    <div class="process-handle">
+                        <i class="fas fa-grip-lines"></i>
+                    </div>
+                    <div class="process-name">
+                        <input type="text" value="新过程" class="process-name-input">
+                    </div>
+                    <div class="process-duration">
+                        <input type="number" min="1" max="240" value="30" class="process-duration-input">
+                    </div>
+                    <div class="process-actions">
+                        <button class="delete-process"><i class="fas fa-times"></i></button>
+                    </div>
+                `;
+                processContainer.appendChild(newProcess);
+                
+                // 添加删除事件
+                newProcess.querySelector('.delete-process').addEventListener('click', function() {
+                    newProcess.remove();
+                    calculateTimes();
+                });
+                
+                // 添加输入事件
+                newProcess.querySelector('.process-duration-input').addEventListener('input', calculateTimes);
+                newProcess.querySelector('.process-name-input').addEventListener('input', updateTimeline);
+                
+                // 更新UI
+                calculateTimes();
+            });
+            
+            // 初始化删除按钮事件
+            document.querySelectorAll('.delete-process').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    this.closest('.process-item').remove();
+                    calculateTimes();
+                });
+            });
+            
+            // 添加输入事件
+            departureTimeInput.addEventListener('input', calculateTimes);
+            arrivalTimeInput.addEventListener('input', calculateTimes);
+            
+            document.querySelectorAll('.process-duration-input').forEach(input => {
+                input.addEventListener('input', calculateTimes);
+            });
+            
+            document.querySelectorAll('.process-name-input').forEach(input => {
+                input.addEventListener('input', updateTimeline);
+            });
+            
+            // 主计算函数
+            function calculateTimes() {
+                // 获取所有过程时间
+                const processItems = document.querySelectorAll('.process-item');
+                const processes = [];
+                
+                processItems.forEach(item => {
+                    const name = item.querySelector('.process-name-input').value;
+                    const duration = parseInt(item.querySelector('.process-duration-input').value) || 0;
+                    processes.push({name, duration});
+                });
+                
+                // 计算总分钟数
+                const totalMinutes = processes.reduce((sum, process) => sum + process.duration, 0);
+                
+                if (departureLock.checked) {
+                    // 从出发时间计算
+                    const departureTime = departureTimeInput.value;
+                    if (!departureTime) return;
+                    
+                    const [hours, minutes] = departureTime.split(':').map(Number);
+                    const departureDate = new Date();
+                    departureDate.setHours(hours, minutes, 0, 0);
+                    
+                    // 计算到达时间
+                    const arrivalDate = new Date(departureDate);
+                    arrivalDate.setMinutes(arrivalDate.getMinutes() + totalMinutes);
+                    
+                    // 更新到达时间
+                    arrivalTimeInput.value = formatTime(arrivalDate);
+                } else {
+                    // 从到达时间计算
+                    const arrivalTime = arrivalTimeInput.value;
+                    if (!arrivalTime) return;
+                    
+                    const [hours, minutes] = arrivalTime.split(':').map(Number);
+                    const arrivalDate = new Date();
+                    arrivalDate.setHours(hours, minutes, 0, 0);
+                    
+                    // 计算出发时间
+                    const departureDate = new Date(arrivalDate);
+                    departureDate.setMinutes(departureDate.getMinutes() - totalMinutes);
+                    
+                    // 更新出发时间
+                    departureTimeInput.value = formatTime(departureDate);
+                }
+                
+                // 更新时间线
+                updateTimeline();
+            }
+            
+            // 更新时间线
+            function updateTimeline() {
+                // 清空时间线
+                timeline.innerHTML = '';
+                
+                // 添加出发时间
+                const departureItem = document.createElement('div');
+                departureItem.className = 'timeline-item';
+                departureItem.innerHTML = `
+                    <div class="timeline-icon">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">
+                            <i class="fas fa-home"></i> 出发
+                        </div>
+                        <div class="timeline-time" id="timeline-departure">${departureTimeInput.value}</div>
+                    </div>
+                `;
+                timeline.appendChild(departureItem);
+                
+                // 获取所有过程时间
+                const processItems = document.querySelectorAll('.process-item');
+                let currentTime = departureTimeInput.value;
+                
+                // 添加过程时间
+                processItems.forEach((item, index) => {
+                    const name = item.querySelector('.process-name-input').value;
+                    const duration = parseInt(item.querySelector('.process-duration-input').value) || 0;
+                    
+                    // 计算当前过程结束时间
+                    const [hours, minutes] = currentTime.split(':').map(Number);
+                    const currentDate = new Date();
+                    currentDate.setHours(hours, minutes, 0, 0);
+                    
+                    const endDate = new Date(currentDate);
+                    endDate.setMinutes(endDate.getMinutes() + duration);
+                    const endTime = formatTime(endDate);
+                    
+                    // 添加过程时间线项
+                    const processItem = document.createElement('div');
+                    processItem.className = 'timeline-item';
+                    processItem.innerHTML = `
+                        <div class="timeline-icon">
+                            <i class="fas fa-${getProcessIcon(index)}"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">
+                                <i class="fas fa-${getProcessIcon(index)}"></i> ${name}
+                            </div>
+                            <div class="timeline-time" id="timeline-process-${index}">${endTime}</div>
+                            <div class="timeline-duration">${duration}分钟</div>
+                        </div>
+                    `;
+                    timeline.appendChild(processItem);
+                    
+                    // 更新当前时间为下一个过程的开始时间
+                    currentTime = endTime;
+                });
+                
+                // 添加到达时间
+                const arrivalItem = document.createElement('div');
+                arrivalItem.className = 'timeline-item';
+                arrivalItem.innerHTML = `
+                    <div class="timeline-icon">
+                        <i class="fas fa-flag-checkered"></i>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">
+                            <i class="fas fa-flag-checkered"></i> 到达
+                        </div>
+                        <div class="timeline-time" id="timeline-arrival">${arrivalTimeInput.value}</div>
+                    </div>
+                `;
+                timeline.appendChild(arrivalItem);
+            }
+            
+            // 格式化时间为 HH:mm
+            function formatTime(date) {
+                const hours = date.getHours().toString().padStart(2, '0');
+                const minutes = date.getMinutes().toString().padStart(2, '0');
+                return `${hours}:${minutes}`;
+            }
+            
+            // 获取过程图标
+            function getProcessIcon(index) {
+                const icons = [
+                    'car', 'bus', 'train', 'subway', 
+                    'walking', 'running', 'bicycle',
+                    'shopping-bag', 'coffee', 'utensils',
+                    'shower', 'briefcase', 'shopping-cart',
+                    'user-clock', 'file-signature', 'passport',
+                    'luggage-cart', 'parking', 'traffic-light',
+                    'map-marker-alt', 'umbrella-beach', 'shopping-basket'
+                ];
+                return icons[index % icons.length];
+            }
+            
+            // 初始化计算
+            calculateTimes();
+        });
+    </script>
+</body>
+</html>
