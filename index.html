@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>出行时间计算器 - 优化版</title>
+    <title>出行时间计算器 - 移动优化版</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -12,6 +12,10 @@
             box-sizing: border-box;
             font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
             -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
         
         body {
@@ -140,6 +144,8 @@
             outline: none;
             width: 100%;
             text-align: center;
+            -webkit-user-select: auto;
+            user-select: auto;
         }
         
         .add-process-btn {
@@ -228,6 +234,8 @@
             min-width: 30px;
             display: flex;
             justify-content: center;
+            -webkit-touch-callout: none;
+            -webkit-user-drag: none;
         }
         
         .process-name {
@@ -243,6 +251,8 @@
             border-radius: 8px;
             font-size: 15px;
             transition: border 0.3s;
+            -webkit-user-select: auto;
+            user-select: auto;
         }
         
         .process-name input:focus {
@@ -263,6 +273,8 @@
             text-align: center;
             font-size: 15px;
             transition: border 0.3s;
+            -webkit-user-select: auto;
+            user-select: auto;
         }
         
         .process-duration input:focus {
@@ -453,6 +465,12 @@
             .time-input input {
                 font-size: 15px;
             }
+            
+            /* 为移动设备增加更大的拖拽区域 */
+            .process-handle {
+                min-width: 40px;
+                padding: 0 10px;
+            }
         }
         
         @media (max-width: 380px) {
@@ -506,6 +524,24 @@
         .drag-hint i {
             margin-right: 5px;
         }
+        
+        /* 移动端拖拽提示 */
+        .mobile-drag-hint {
+            display: none;
+            text-align: center;
+            padding: 6px;
+            background: #e1f5fe;
+            border-radius: 8px;
+            margin-top: 5px;
+            font-size: 11px;
+            color: #0288d1;
+        }
+        
+        @media (max-width: 480px) {
+            .mobile-drag-hint {
+                display: block;
+            }
+        }
     </style>
 </head>
 <body>
@@ -537,6 +573,10 @@
                 
                 <div class="drag-hint">
                     <i class="fas fa-info-circle"></i> 拖拽项目可调整顺序
+                </div>
+                
+                <div class="mobile-drag-hint">
+                    <i class="fas fa-hand-pointer"></i> 长按并拖动可排序
                 </div>
                 
                 <div class="process-list" id="process-container">
@@ -983,6 +1023,9 @@
                     draggedItem.classList.add('dragging');
                     e.dataTransfer.effectAllowed = 'move';
                     e.dataTransfer.setData('text/plain', '');
+                    
+                    // 防止移动设备上的文本选择
+                    e.preventDefault();
                 }
             });
             
@@ -1027,6 +1070,11 @@
             // 为所有过程项添加可拖拽属性
             document.querySelectorAll('.process-handle').forEach(handle => {
                 handle.setAttribute('draggable', 'true');
+                
+                // 添加触摸事件监听器
+                handle.addEventListener('touchstart', function(e) {
+                    e.preventDefault(); // 防止移动设备上的默认行为
+                }, { passive: false });
             });
             
             // 初始计算
