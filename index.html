@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>出行时间计算器</title>
+    <title>出行时间计算器 - 优化版</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -89,7 +89,6 @@
         .card-header {
             display: flex;
             align-items: center;
-            justify-content: space-between;
             margin-bottom: 15px;
         }
         
@@ -113,18 +112,6 @@
             justify-content: center;
         }
         
-        .time-input-group {
-            margin-bottom: 12px;
-        }
-        
-        .time-input-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #2c3e50;
-            font-size: 14px;
-        }
-        
         .time-input {
             display: flex;
             align-items: center;
@@ -133,11 +120,7 @@
             padding: 0 15px;
             border: 2px solid #c2e0ff;
             height: 48px;
-        }
-        
-        .time-input.disabled {
-            background: #f5f7fa;
-            border-color: #e2e8f0;
+            margin-top: 10px;
         }
         
         .time-input i {
@@ -159,69 +142,6 @@
             text-align: center;
         }
         
-        .time-input.disabled input {
-            color: #718096;
-        }
-        
-        .lock-toggle {
-            display: flex;
-            align-items: center;
-            background: rgba(58, 123, 213, 0.1);
-            padding: 5px 10px;
-            border-radius: 30px;
-        }
-        
-        .lock-toggle span {
-            margin-right: 8px;
-            font-size: 13px;
-            color: #2c3e50;
-        }
-        
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 46px;
-            height: 22px;
-        }
-        
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 22px;
-        }
-        
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 16px;
-            width: 16px;
-            left: 3px;
-            bottom: 3px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-        
-        input:checked + .slider {
-            background-color: #4cd97b;
-        }
-        
-        input:checked + .slider:before {
-            transform: translateX(24px);
-        }
-        
         .add-process-btn {
             background: linear-gradient(90deg, #3a7bd5, #00d2ff);
             color: white;
@@ -240,8 +160,42 @@
             box-shadow: 0 4px 10px rgba(58, 123, 213, 0.3);
         }
         
+        .add-process-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(58, 123, 213, 0.4);
+        }
+        
+        .add-process-btn:active {
+            transform: translateY(0);
+        }
+        
         .add-process-btn i {
             margin-right: 8px;
+        }
+        
+        .process-list {
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 5px;
+            margin-bottom: 10px;
+        }
+        
+        .process-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .process-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .process-list::-webkit-scrollbar-thumb {
+            background: #c2e0ff;
+            border-radius: 10px;
+        }
+        
+        .process-list::-webkit-scrollbar-thumb:hover {
+            background: #3a7bd5;
         }
         
         .process-item {
@@ -253,6 +207,17 @@
             margin-bottom: 10px;
             transition: all 0.3s ease;
             position: relative;
+            cursor: grab;
+        }
+        
+        .process-item:active {
+            cursor: grabbing;
+            box-shadow: 0 0 10px rgba(58, 123, 213, 0.2);
+        }
+        
+        .process-item.dragging {
+            opacity: 0.5;
+            background: #e6f7ff;
         }
         
         .process-handle {
@@ -277,6 +242,12 @@
             border: 1px solid #ddd;
             border-radius: 8px;
             font-size: 15px;
+            transition: border 0.3s;
+        }
+        
+        .process-name input:focus {
+            border-color: #3a7bd5;
+            outline: none;
         }
         
         .process-duration {
@@ -291,6 +262,17 @@
             border-radius: 8px;
             text-align: center;
             font-size: 15px;
+            transition: border 0.3s;
+        }
+        
+        .process-duration input:focus {
+            border-color: #3a7bd5;
+            outline: none;
+        }
+        
+        .process-duration input.invalid {
+            border-color: #ff6b6b;
+            background-color: #fff0f0;
         }
         
         .process-actions {
@@ -309,6 +291,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .delete-process:hover {
+            background: #ff5252;
+            transform: scale(1.1);
         }
         
         .timeline {
@@ -333,6 +321,7 @@
             margin-bottom: 25px;
             position: relative;
             padding-left: 50px;
+            transition: all 0.3s ease;
         }
         
         .timeline-icon {
@@ -361,6 +350,7 @@
             padding: 14px;
             flex: 1;
             box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
         }
         
         .timeline-title {
@@ -385,16 +375,14 @@
             text-align: center;
         }
         
-        .timeline-duration {
-            font-size: 12px;
-            color: #7f8c8d;
-            margin-top: 5px;
-            padding: 4px 8px;
-            background: rgba(58, 123, 213, 0.1);
-            border-radius: 15px;
-            display: inline-block;
+        .total-time {
             text-align: center;
-            width: 100%;
+            background: #3a7bd5;
+            color: white;
+            padding: 8px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: bold;
         }
         
         .footer {
@@ -482,33 +470,12 @@
             touch-action: manipulation;
         }
         
-        button, .switch {
+        button {
             cursor: pointer;
         }
         
         input[type="time"] {
             -webkit-appearance: none;
-        }
-        
-        /* 添加加载动画 */
-        .loader {
-            display: none;
-            text-align: center;
-            padding: 10px;
-        }
-        
-        .loader .spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(58, 123, 213, 0.3);
-            border-radius: 50%;
-            border-top-color: #3a7bd5;
-            animation: spin 1s ease-in-out infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
         }
         
         /* 操作提示 */
@@ -521,13 +488,31 @@
             font-size: 12px;
             color: #1890ff;
         }
+        
+        /* 拖拽提示 */
+        .drag-hint {
+            text-align: center;
+            padding: 6px;
+            background: #fff8e1;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 11px;
+            color: #ff9800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .drag-hint i {
+            margin-right: 5px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1><i class="fas fa-clock"></i> 出行时间计算器</h1>
-            <p>设置过程时间，智能计算出发或到达时间</p>
+            <p>输入时间或过程，自动计算出行安排</p>
         </div>
         
         <div class="content">
@@ -535,23 +520,13 @@
             <div class="card departure-card">
                 <div class="card-header">
                     <h2><i class="fas fa-home"></i> 出发时间</h2>
-                    <div class="lock-toggle">
-                        <span>固定</span>
-                        <label class="switch">
-                            <input type="checkbox" id="departure-lock" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
                 </div>
                 
-                <div class="time-input-group">
-                    <label>出发时间</label>
-                    <div class="time-input" id="departure-time-container">
-                        <i class="fas fa-clock"></i>
-                        <input type="time" id="departure-time" value="08:30">
-                    </div>
+                <div class="time-input" id="departure-time-container">
+                    <i class="fas fa-clock"></i>
+                    <input type="time" id="departure-time" value="08:30">
                 </div>
-                <div class="hint">固定时，出发时间作为计算起点</div>
+                <div class="hint">输入后，到达时间将自动计算</div>
             </div>
             
             <!-- 过程时间卡片 -->
@@ -560,7 +535,11 @@
                     <h2><i class="fas fa-list"></i> 过程时间</h2>
                 </div>
                 
-                <div id="process-container">
+                <div class="drag-hint">
+                    <i class="fas fa-info-circle"></i> 拖拽项目可调整顺序
+                </div>
+                
+                <div class="process-list" id="process-container">
                     <div class="process-item">
                         <div class="process-handle">
                             <i class="fas fa-grip-lines"></i>
@@ -617,23 +596,13 @@
             <div class="card arrival-card">
                 <div class="card-header">
                     <h2><i class="fas fa-flag-checkered"></i> 到达时间</h2>
-                    <div class="lock-toggle">
-                        <span>固定</span>
-                        <label class="switch">
-                            <input type="checkbox" id="arrival-lock">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
                 </div>
                 
-                <div class="time-input-group">
-                    <label>到达时间</label>
-                    <div class="time-input" id="arrival-time-container">
-                        <i class="fas fa-clock"></i>
-                        <input type="time" id="arrival-time" value="09:30">
-                    </div>
+                <div class="time-input" id="arrival-time-container">
+                    <i class="fas fa-clock"></i>
+                    <input type="time" id="arrival-time" value="09:30">
                 </div>
-                <div class="hint">固定时，到达时间作为计算起点</div>
+                <div class="hint">输入后，出发时间将自动计算</div>
             </div>
             
             <!-- 时间线 -->
@@ -659,7 +628,6 @@
                             <i class="fas fa-car"></i> 交通时间
                         </div>
                         <div class="timeline-time" id="timeline-travel">09:15</div>
-                        <div class="timeline-duration">45分钟</div>
                     </div>
                 </div>
                 
@@ -672,7 +640,6 @@
                             <i class="fas fa-shield-alt"></i> 安检时间
                         </div>
                         <div class="timeline-time" id="timeline-airport">09:45</div>
-                        <div class="timeline-duration">30分钟</div>
                     </div>
                 </div>
                 
@@ -685,7 +652,6 @@
                             <i class="fas fa-walking"></i> 步行时间
                         </div>
                         <div class="timeline-time" id="timeline-boarding">10:00</div>
-                        <div class="timeline-duration">15分钟</div>
                     </div>
                 </div>
                 
@@ -701,84 +667,51 @@
                     </div>
                 </div>
             </div>
-            
-            <div class="loader" id="loader">
-                <div class="spinner"></div>
-            </div>
         </div>
         
         <div class="footer">
             <p>温馨提示：计算结果基于您设置的时间参数，实际请根据交通状况和个人需求调整</p>
-            <p>手机访问链接：<span id="share-link">travel-time-calculator.netlify.app</span></p>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // 获取DOM元素
-            const departureLock = document.getElementById('departure-lock');
-            const arrivalLock = document.getElementById('arrival-lock');
             const departureTimeInput = document.getElementById('departure-time');
             const arrivalTimeInput = document.getElementById('arrival-time');
-            const departureContainer = document.getElementById('departure-time-container');
-            const arrivalContainer = document.getElementById('arrival-time-container');
             const processContainer = document.getElementById('process-container');
             const addProcessBtn = document.getElementById('add-process');
             const timeline = document.getElementById('timeline');
-            const loader = document.getElementById('loader');
             
-            // 显示加载动画
-            function showLoader() {
-                loader.style.display = 'block';
-            }
-            
-            // 隐藏加载动画
-            function hideLoader() {
-                loader.style.display = 'none';
-            }
-            
-            // 更新输入框状态
-            function updateInputStates() {
-                if (departureLock.checked) {
-                    // 出发时间固定，到达时间可编辑
-                    departureContainer.classList.add('disabled');
-                    departureTimeInput.disabled = true;
-                    arrivalContainer.classList.remove('disabled');
-                    arrivalTimeInput.disabled = false;
-                } else {
-                    // 到达时间固定，出发时间可编辑
-                    arrivalContainer.classList.add('disabled');
-                    arrivalTimeInput.disabled = true;
-                    departureContainer.classList.remove('disabled');
-                    departureTimeInput.disabled = false;
-                }
-            }
-            
-            // 初始化锁定状态
-            departureLock.checked = true;
-            arrivalLock.checked = false;
-            updateInputStates();
-            
-            // 锁定开关逻辑
-            departureLock.addEventListener('change', function() {
-                if (this.checked) {
-                    arrivalLock.checked = false;
-                } else {
-                    arrivalLock.checked = true;
-                }
-                updateInputStates();
-                calculateTimes();
-            });
-            
-            arrivalLock.addEventListener('change', function() {
-                if (this.checked) {
-                    departureLock.checked = false;
-                } else {
-                    departureLock.checked = true;
-                }
-                updateInputStates();
-                calculateTimes();
-            });
+            // 图标映射表
+            const iconMap = {
+                '交通': 'car',
+                '公交': 'bus',
+                '地铁': 'subway',
+                '火车': 'train',
+                '飞机': 'plane',
+                '步行': 'walking',
+                '跑步': 'running',
+                '自行车': 'bicycle',
+                '安检': 'shield-alt',
+                '值机': 'ticket-alt',
+                '登机': 'plane-departure',
+                '用餐': 'utensils',
+                '咖啡': 'coffee',
+                '购物': 'shopping-bag',
+                '等待': 'user-clock',
+                '会议': 'users',
+                '工作': 'briefcase',
+                '健身': 'dumbbell',
+                '学习': 'book',
+                '休息': 'couch',
+                '医疗': 'first-aid',
+                '银行': 'university',
+                '电影': 'film',
+                '公园': 'tree',
+                '酒店': 'hotel',
+                '游览': 'monument'
+            };
             
             // 添加过程时间
             addProcessBtn.addEventListener('click', function() {
@@ -800,94 +733,143 @@
                 `;
                 processContainer.appendChild(newProcess);
                 
-                // 添加删除事件
-                newProcess.querySelector('.delete-process').addEventListener('click', function() {
-                    newProcess.remove();
-                    calculateTimes();
-                });
+                // 为拖拽句柄添加属性
+                newProcess.querySelector('.process-handle').setAttribute('draggable', 'true');
                 
-                // 添加输入事件
-                newProcess.querySelector('.process-duration-input').addEventListener('input', calculateTimes);
-                newProcess.querySelector('.process-name-input').addEventListener('input', updateTimeline);
+                // 自动聚焦到新过程名称
+                newProcess.querySelector('.process-name-input').focus();
                 
                 // 更新UI
                 calculateTimes();
             });
             
-            // 初始化删除按钮事件
-            document.querySelectorAll('.delete-process').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    this.closest('.process-item').remove();
+            // 事件委托处理过程项的删除
+            processContainer.addEventListener('click', function(e) {
+                if (e.target.closest('.delete-process')) {
+                    e.target.closest('.process-item').remove();
                     calculateTimes();
-                });
+                }
+            });
+            
+            // 事件委托处理过程项的输入
+            processContainer.addEventListener('input', function(e) {
+                if (e.target.classList.contains('process-duration-input')) {
+                    validateDurationInput(e.target);
+                    calculateTimes();
+                } else if (e.target.classList.contains('process-name-input')) {
+                    updateTimeline();
+                }
             });
             
             // 添加输入事件
-            departureTimeInput.addEventListener('input', calculateTimes);
-            arrivalTimeInput.addEventListener('input', calculateTimes);
-            
-            document.querySelectorAll('.process-duration-input').forEach(input => {
-                input.addEventListener('input', calculateTimes);
+            departureTimeInput.addEventListener('input', function() {
+                calculateArrivalTime();
             });
             
-            document.querySelectorAll('.process-name-input').forEach(input => {
-                input.addEventListener('input', updateTimeline);
+            arrivalTimeInput.addEventListener('input', function() {
+                calculateDepartureTime();
             });
             
-            // 主计算函数
-            function calculateTimes() {
-                showLoader();
+            // 验证过程时间输入
+            function validateDurationInput(input) {
+                let value = parseInt(input.value);
                 
-                setTimeout(() => {
-                    // 获取所有过程时间
-                    const processItems = document.querySelectorAll('.process-item');
-                    const processes = [];
-                    
-                    processItems.forEach(item => {
-                        const name = item.querySelector('.process-name-input').value;
-                        const duration = parseInt(item.querySelector('.process-duration-input').value) || 0;
-                        processes.push({name, duration});
-                    });
-                    
-                    // 计算总分钟数
-                    const totalMinutes = processes.reduce((sum, process) => sum + process.duration, 0);
-                    
-                    if (departureLock.checked) {
-                        // 从出发时间计算
-                        const departureTime = departureTimeInput.value;
-                        if (!departureTime) return;
-                        
-                        const [hours, minutes] = departureTime.split(':').map(Number);
-                        const departureDate = new Date();
-                        departureDate.setHours(hours, minutes, 0, 0);
-                        
-                        // 计算到达时间
-                        const arrivalDate = new Date(departureDate);
-                        arrivalDate.setMinutes(arrivalDate.getMinutes() + totalMinutes);
-                        
-                        // 更新到达时间
-                        arrivalTimeInput.value = formatTime(arrivalDate);
-                    } else {
-                        // 从到达时间计算
-                        const arrivalTime = arrivalTimeInput.value;
-                        if (!arrivalTime) return;
-                        
-                        const [hours, minutes] = arrivalTime.split(':').map(Number);
-                        const arrivalDate = new Date();
-                        arrivalDate.setHours(hours, minutes, 0, 0);
-                        
-                        // 计算出发时间
-                        const departureDate = new Date(arrivalDate);
-                        departureDate.setMinutes(departureDate.getMinutes() - totalMinutes);
-                        
-                        // 更新出发时间
-                        departureTimeInput.value = formatTime(departureDate);
+                if (isNaN(value)) {
+                    input.value = 1;
+                } else if (value < 1) {
+                    input.value = 1;
+                } else if (value > parseInt(input.max)) {
+                    input.value = input.max;
+                }
+                
+                // 添加/移除无效样式
+                if (value < 1 || value > parseInt(input.max)) {
+                    input.classList.add('invalid');
+                } else {
+                    input.classList.remove('invalid');
+                }
+            }
+            
+            // 从出发时间计算到达时间
+            function calculateArrivalTime() {
+                const departureTime = departureTimeInput.value;
+                if (!departureTime) return;
+                
+                // 获取总过程时间
+                const totalMinutes = getTotalProcessTime();
+                
+                const [hours, minutes] = departureTime.split(':').map(Number);
+                const departureDate = new Date();
+                departureDate.setHours(hours, minutes, 0, 0);
+                
+                // 计算到达时间
+                const arrivalDate = new Date(departureDate);
+                arrivalDate.setMinutes(arrivalDate.getMinutes() + totalMinutes);
+                
+                // 更新到达时间
+                arrivalTimeInput.value = formatTime(arrivalDate);
+                
+                // 更新时间线
+                updateTimeline();
+            }
+            
+            // 从到达时间计算出发时间
+            function calculateDepartureTime() {
+                const arrivalTime = arrivalTimeInput.value;
+                if (!arrivalTime) return;
+                
+                // 获取总过程时间
+                const totalMinutes = getTotalProcessTime();
+                
+                const [hours, minutes] = arrivalTime.split(':').map(Number);
+                const arrivalDate = new Date();
+                arrivalDate.setHours(hours, minutes, 0, 0);
+                
+                // 计算出发时间
+                const departureDate = new Date(arrivalDate);
+                departureDate.setMinutes(departureDate.getMinutes() - totalMinutes);
+                
+                // 更新出发时间
+                departureTimeInput.value = formatTime(departureDate);
+                
+                // 更新时间线
+                updateTimeline();
+            }
+            
+            // 计算所有时间
+            function calculateTimes() {
+                // 优先使用出发时间计算
+                if (departureTimeInput.value) {
+                    calculateArrivalTime();
+                } else if (arrivalTimeInput.value) {
+                    calculateDepartureTime();
+                }
+            }
+            
+            // 获取总过程时间
+            function getTotalProcessTime() {
+                const processItems = document.querySelectorAll('.process-item');
+                let totalMinutes = 0;
+                
+                processItems.forEach(item => {
+                    const duration = parseInt(item.querySelector('.process-duration-input').value) || 0;
+                    totalMinutes += duration;
+                });
+                
+                return totalMinutes;
+            }
+            
+            // 获取智能图标
+            function getSmartIcon(name) {
+                // 尝试匹配关键字
+                for (const [keyword, icon] of Object.entries(iconMap)) {
+                    if (name.includes(keyword)) {
+                        return icon;
                     }
-                    
-                    // 更新时间线
-                    updateTimeline();
-                    hideLoader();
-                }, 300);
+                }
+                
+                // 默认图标
+                return 'clock';
             }
             
             // 更新时间线
@@ -906,7 +888,7 @@
                         <div class="timeline-title">
                             <i class="fas fa-home"></i> 出发
                         </div>
-                        <div class="timeline-time" id="timeline-departure">${departureTimeInput.value}</div>
+                        <div class="timeline-time" id="timeline-departure">${departureTimeInput.value || '--:--'}</div>
                     </div>
                 `;
                 timeline.appendChild(departureItem);
@@ -914,40 +896,44 @@
                 // 获取所有过程时间
                 const processItems = document.querySelectorAll('.process-item');
                 let currentTime = departureTimeInput.value;
+                let totalDuration = 0;
                 
                 // 添加过程时间
                 processItems.forEach((item, index) => {
-                    const name = item.querySelector('.process-name-input').value;
+                    const name = item.querySelector('.process-name-input').value || '过程';
                     const duration = parseInt(item.querySelector('.process-duration-input').value) || 0;
+                    const icon = getSmartIcon(name);
                     
                     // 计算当前过程结束时间
-                    const [hours, minutes] = currentTime.split(':').map(Number);
-                    const currentDate = new Date();
-                    currentDate.setHours(hours, minutes, 0, 0);
+                    if (currentTime && currentTime !== '--:--') {
+                        const [hours, minutes] = currentTime.split(':').map(Number);
+                        const currentDate = new Date();
+                        currentDate.setHours(hours, minutes, 0, 0);
+                        
+                        const endDate = new Date(currentDate);
+                        endDate.setMinutes(endDate.getMinutes() + duration);
+                        currentTime = formatTime(endDate);
+                    } else {
+                        currentTime = '--:--';
+                    }
                     
-                    const endDate = new Date(currentDate);
-                    endDate.setMinutes(endDate.getMinutes() + duration);
-                    const endTime = formatTime(endDate);
+                    totalDuration += duration;
                     
                     // 添加过程时间线项
                     const processItem = document.createElement('div');
                     processItem.className = 'timeline-item';
                     processItem.innerHTML = `
                         <div class="timeline-icon">
-                            <i class="fas fa-${getProcessIcon(index)}"></i>
+                            <i class="fas fa-${icon}"></i>
                         </div>
                         <div class="timeline-content">
                             <div class="timeline-title">
-                                <i class="fas fa-${getProcessIcon(index)}"></i> ${name}
+                                <i class="fas fa-${icon}"></i> ${name}
                             </div>
-                            <div class="timeline-time" id="timeline-process-${index}">${endTime}</div>
-                            <div class="timeline-duration">${duration}分钟</div>
+                            <div class="timeline-time" id="timeline-process-${index}">${currentTime}</div>
                         </div>
                     `;
                     timeline.appendChild(processItem);
-                    
-                    // 更新当前时间为下一个过程的开始时间
-                    currentTime = endTime;
                 });
                 
                 // 添加到达时间
@@ -961,10 +947,24 @@
                         <div class="timeline-title">
                             <i class="fas fa-flag-checkered"></i> 到达
                         </div>
-                        <div class="timeline-time" id="timeline-arrival">${arrivalTimeInput.value}</div>
+                        <div class="timeline-time" id="timeline-arrival">${arrivalTimeInput.value || '--:--'}</div>
                     </div>
                 `;
                 timeline.appendChild(arrivalItem);
+                
+                // 添加总时间显示
+                if (totalDuration > 0) {
+                    const hours = Math.floor(totalDuration / 60);
+                    const minutes = totalDuration % 60;
+                    const totalTimeText = hours > 0 ? 
+                        `总行程时间: ${hours}小时${minutes}分钟` : 
+                        `总行程时间: ${minutes}分钟`;
+                    
+                    const totalTime = document.createElement('div');
+                    totalTime.className = 'total-time';
+                    totalTime.textContent = totalTimeText;
+                    timeline.appendChild(totalTime);
+                }
             }
             
             // 格式化时间为 HH:mm
@@ -974,26 +974,63 @@
                 return `${hours}:${minutes}`;
             }
             
-            // 获取过程图标
-            function getProcessIcon(index) {
-                const icons = [
-                    'car', 'bus', 'train', 'subway', 
-                    'walking', 'running', 'bicycle',
-                    'shopping-bag', 'coffee', 'utensils',
-                    'shower', 'briefcase', 'shopping-cart',
-                    'user-clock', 'file-signature', 'passport',
-                    'luggage-cart', 'parking', 'traffic-light',
-                    'map-marker-alt', 'umbrella-beach', 'shopping-basket'
-                ];
-                return icons[index % icons.length];
+            // 初始化拖拽功能
+            let draggedItem = null;
+            
+            processContainer.addEventListener('dragstart', function(e) {
+                if (e.target.classList.contains('process-handle')) {
+                    draggedItem = e.target.closest('.process-item');
+                    draggedItem.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', '');
+                }
+            });
+            
+            processContainer.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                if (!draggedItem) return;
+                
+                const afterElement = getDragAfterElement(processContainer, e.clientY);
+                const currentItem = document.querySelector('.dragging');
+                
+                if (!afterElement) {
+                    processContainer.appendChild(currentItem);
+                } else {
+                    processContainer.insertBefore(currentItem, afterElement);
+                }
+            });
+            
+            processContainer.addEventListener('dragend', function(e) {
+                if (draggedItem) {
+                    draggedItem.classList.remove('dragging');
+                    draggedItem = null;
+                    calculateTimes();
+                }
+            });
+            
+            // 辅助函数：获取拖拽后的元素位置
+            function getDragAfterElement(container, y) {
+                const draggableElements = [...container.querySelectorAll('.process-item:not(.dragging)')];
+                
+                return draggableElements.reduce((closest, child) => {
+                    const box = child.getBoundingClientRect();
+                    const offset = y - box.top - box.height / 2;
+                    
+                    if (offset < 0 && offset > closest.offset) {
+                        return { offset: offset, element: child };
+                    } else {
+                        return closest;
+                    }
+                }, { offset: Number.NEGATIVE_INFINITY }).element;
             }
             
-            // 初始化计算
-            calculateTimes();
+            // 为所有过程项添加可拖拽属性
+            document.querySelectorAll('.process-handle').forEach(handle => {
+                handle.setAttribute('draggable', 'true');
+            });
             
-            // 添加分享功能
-            const shareLink = document.getElementById('share-link');
-            shareLink.textContent = window.location.hostname || 'travel-time-calculator.netlify.app';
+            // 初始计算
+            calculateTimes();
         });
     </script>
 </body>
